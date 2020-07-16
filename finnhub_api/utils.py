@@ -12,34 +12,29 @@ def multicall(func, params, *args, **kwargs):
     at once and waits until all tasks complete
     before returning.
 
+    :param func: (callable) api method to call
+    :param params: (iterable) list of parameters for the api call (usually symbols).
+    :param args, kwargs: Additional positional and keyword args passed to func.
+
     :returns dictionary
         {parameter: api result}
     """
+
+    @multitasking.task
+    def _multitask(out, func, param, *args, **kwargs):
+        """
+        Inner function that populates the returned dictionary.
+        """
+        result = func(param, *args, **kwargs)
+        out[param] = result
+
     out = {}
     for param in params:
-        out[param] = _multitask(
+        _multitask(
             out, func, param, *args, **kwargs
         )
     multitasking.wait_for_tasks()
     return out
-
-
-@multitasking.task
-def _multitask(out, func, param, *args, **kwargs):
-    """
-    Utility for making the same api call several times
-    at once with different parameters.
-
-    :param out: dict: container for returned data
-    :param func: api method to call
-    :param param: the parameter in the api call that is changing (usually symbols)
-    :param args: positional arguments for api method
-    :param kwargs: keyword arguments for api method
-
-    :return: None: Only populates the 'out' dictionary
-    """
-    result = func(param, *args, **kwargs)
-    out[param] = result
 
 
 def get_finnhub_api_key(env=None):
@@ -49,11 +44,10 @@ def get_finnhub_api_key(env=None):
 
 
 def get_formatted_dates(start_date=None, end_date=None, lookback_days=7):
-    '''
+    """
     Returns start and end dates for queries with dates in the proper format
     Default dates are one week ago until today.
-
-    '''
+    """
 
     if end_date is None:
         end_date = pd.Timestamp.utcnow().strftime('%Y-%m-%d')
