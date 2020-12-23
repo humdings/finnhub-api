@@ -1,5 +1,4 @@
 import pandas as pd
-
 from finnhub_api.base import FinnHubBase
 from finnhub_api.options import FinnHubOptionChain
 from finnhub_api.utils import multicall, get_finnhub_api_key
