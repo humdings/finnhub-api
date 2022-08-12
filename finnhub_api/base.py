@@ -147,7 +147,19 @@ class FinnHubBase(object):
         return self.call_api('/stock/candle', params)
 
     def quote(self, symbol):
-        return pd.Series(self.call_api('/quote', params={'symbol': symbol}), dtype=float)
+        index_names = {
+            'c': 'C',
+            'd': 'change',
+            'dp': 'change_pct',
+            'h': 'H',
+            'l': 'low',
+            'o': 'O',
+            'pc': 'prev_close',
+            't': 'dt'
+        }
+        quote = self.call_api('/quote', params={'symbol': symbol})
+
+        return pd.Series({index_names[k]: quote[k] for k in quote}, dtype=float)
 
     def get_index_constituents(self, symbol):
         params = {'symbol': symbol}
